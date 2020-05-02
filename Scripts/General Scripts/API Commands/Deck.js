@@ -25,12 +25,6 @@ function rebuildDeckFn(matches, msg) {
   var decks = suggestCMD(suggestion, deckPhrase, msg.playerid, 'deck', obj => playerIsGM(msg.playerid) || obj.get('showplayers'))
   if(!decks) return;
   var deck = decks[0]
-
-  if(!msg.selected || msg.selected.length < 2) {
-    whisper('Select at least two graphics.', {speakingTo: msg.playerid})
-    return
-  }
-
   var cardsToRemove = findObjs({_deckid: deck.get("id")});
   _.each(cardsToRemove, (card) => card.remove())
   var leftmostGraphic = null
@@ -41,7 +35,7 @@ function rebuildDeckFn(matches, msg) {
       leftmostPosition = leftValue
       leftmostGraphic = graphic
     }
-  })
+  }, { min: 2 })
 
   deck.set({
       avatar: getCleanImgsrc(leftmostGraphic.get('imgsrc'), 'thumb'),
@@ -141,67 +135,22 @@ function addDeckFn(matches, msg) {
   var decks = suggestCMD(suggestion, deckPhrase, msg.playerid, 'deck', obj => playerIsGM(msg.playerid) || obj.get('showplayers'))
   if(!decks) return;
   var deck = decks[0]
-
-  if(!msg.selected || msg.selected.length < 1) {
-    whisper('Select at least one graphic.', {speakingTo: msg.playerid})
-  }
-
-  eachGraphic(msg, (graphic) => {
-    var originalCardId = graphic.get("cardid")
-    if(!originalCardId) {
-      whisper("WARNING: Graphic + " + graphic.get("name") + " is not a card.", {speakingTo: msg.playerid})
-      return
+  eachCard(msg, (character, graphic, originalCard, originalDeck) => {
+    if(originalDeck && originalDeck.id == deck.id) {
+      whisper(`WARNING: Card ${originalCard.get('name')} already added to Deck ${deck.get('name')}.`, {speakingTo: msg.playerid})
     }
 
-    const originalCard = getObj('card', originalCardId)
-    if(originalCard && originalCard.get('_deckid') == deck.id) {
-      whisper(`WARNING: Card ${card.get('name')} already added to Deck ${deck.get('name')}.`, {speakingTo: msg.playerid})
-    }
-
-    var name = graphic.get('name')
-    if(originalCard && !name) {
-      name = originalCard.get('name')
-    }
-
-    var card = createObj("card", {
+    const name = graphic.get('name') || originalCard ? originalCard.get('name') : ''
+    const card = createObj('card', {
       _deckid: deck.id,
       name: name,
       avatar: graphic.get("imgsrc")
     });
 
     whisper(deckNotification(deck, {"card": card, "status": "Added"}), {speakingTo: msg.playerid, gmEcho: true})
-  })
+  }, { cardRequired: false, min: 1 })
 
   shuffleDeck(deck.id, false)
-}
-
-function removeDeckFn(matches, msg) {
-  var suggestion = '!deck remove $'
-  var deckPhrase = matches[1] || ''
-  var decks = suggestCMD(suggestion, deckPhrase, msg.playerid, 'deck', obj => playerIsGM(msg.playerid) || obj.get('showplayers'))
-  if(!decks) return;
-  var deck = decks[0]
-
-  if(!msg.selected || msg.selected.length < 1) {
-    whisper('Select at least one graphic.', {speakingTo: msg.playerid})
-  }
-
-  eachGraphic(msg, (graphic) => {
-    var cardid = graphic.get("_cardid")
-    if(!cardid) {
-      whisper("WARNING: Graphic " + graphic.get("name") + " is not a card.")
-      return
-    }
-
-    var card = getObj("card", cardid)
-    if(card.get("_deckid") != deck.id) {
-      whisper("WARNING: The Card " + graphic.get("name") + " does not belong to the Deck " + deck.get("name") + ".")
-      return
-    }
-
-    whisper(deckNotification(deck, {"card": card, "status": "Removed"}), {speakingTo: msg.playerid, gmEcho: true})
-    card.remove()
-  })
 }
 
 function playDeckFn(matches, msg, options) {
@@ -291,7 +240,6 @@ on('ready',function(){
   CentralInput.addCMD(/^!\s*deck\s+shuffle\s+(\S.*)$/i, shuffleDeckFn, true);
   CentralInput.addCMD(/^!\s*deck\s+draw\s+(\S.*)$/i, drawDeckFn, true);
   CentralInput.addCMD(/^!\s*deck\s+add\s+(\S.*)$/i, addDeckFn,true);
-  CentralInput.addCMD(/^!\s*deck\s+remove\s+(\S.*)$/i, removeDeckFn,true);
   CentralInput.addCMD(/^!\s*deck\s+play\s+(\S.*)$/i, playDeckFn,true);
   CentralInput.addCMD(/^!\s*deck\s+dump\s+(\S.*)$/i, dumpDeckFn,true);
 });

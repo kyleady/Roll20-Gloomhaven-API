@@ -111,13 +111,14 @@ on("ready",function(){
   CentralInput.addCMD(/^!\s*init(?:iative)?\s+clean$/i, () => {
     const turns = new INQTurns({ order: GLOOMHAVEN_INITIATIVE_ORDER })
     turns.turnorder = [turns.toTurnObj('End of Round', 'R0')]
+    turns.save()
     state.INK_GLOOMHAVEN = state.INK_GLOOMHAVEN || {}
-    state.INK_GLOOMHAVEN.player_initiative = {}
-    announceTurn(turns)
+    state.INK_GLOOMHAVEN.playerInitiative = {}
+    announcePlan()
   }, true);
 
   //secretly store's player initaive for use when all players are ready
-  CentralInput.addCMD(/^!\s*init(?:iative)?\s+plan\s*(|\s\S.*)$/i, ([, playername], msg) => {
+  CentralInput.addCMD(/^!\s*init(?:iative)?\s+plan\s*(.*)$/i, ([, playername], msg) => {
     let player = undefined;
     if(playername) {
       let suggestion = '!init plan $'
@@ -128,7 +129,7 @@ on("ready",function(){
       player = getObj('player', msg.playerid)
     }
 
-    const initObj = calcGloomhavenInit(msg)
+    const initObj = calcGloomhavenInit(msg, { player: player })
     if(!initObj) return
     const turns = new INQTurns({ order: GLOOMHAVEN_INITIATIVE_ORDER })
     const turnObj = turns.toTurnObj(initObj.name, `${initObj.first} ${initObj.second}`)

@@ -9,6 +9,10 @@ function eachCard(msg, givenFunction, options) {
     let deck
 
     let cardid = graphic.get('_cardid')
+    if(!cardid && graphic.get('gmnotes').startsWith('cardid:')) {
+      cardid = graphic.get('gmnotes').replace('cardid:', '')
+    }
+
     if(!cardid && options.cardRequired) {
       whisper("Select only cards for initiative.", {speakingTo: msg.playerid})
       return
@@ -55,12 +59,23 @@ function eachCharacter(msg, givenFunction, options){
   options = options || {}
   if(options.characterRequired == undefined) options.characterRequired = true;
   if(options.defaultCharacter == undefined) options.defaultCharacter = true;
+  if(options.onlyOneCharacter) {
+    options.min = 1
+    options.max = 1
+  }
+  
   if((msg.selected == undefined || msg.selected.length <= 0) && options.defaultCharacter){
     msg.selected = [defaultCharacter(msg.playerid)];
     if(msg.selected[0] == undefined) return;
   }
 
-  if(options.onlyOneCharacter && msg.selected.length != 1) return whisper('Select only one graphic.');
+  if(options.min && (!msg.selected || msg.selected.length < options.min)) {
+    return whisper(`Select at least ${options.min} graphic(s).`);
+  }
+
+  if(options.max != undefined && msg.selected && msg.selected.length > options.max) {
+    return whisper(`Select at most ${options.max} graphic(s).`);
+  }
 
   _.each(msg.selected, function(obj){
     if(obj._type == 'graphic'){

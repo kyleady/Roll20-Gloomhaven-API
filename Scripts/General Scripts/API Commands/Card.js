@@ -18,4 +18,11 @@ function flipCardFn([], msg) {
 
 on('ready', () => {
   CentralInput.addCMD(/^!\s*card\s*flip\s*$/i, flipCardFn, true)
+
+  CentralInput.addCMD(/^!\s*card\s*remove\s*$/i, ([], msg) => {
+    eachCard(msg, (character, graphic, card, deck) => {
+      whisper(deckNotification(deck, {"card": card, "status": "Removed"}), {speakingTo: msg.playerid, gmEcho: true})
+      card.remove()
+    }, { min: 1 })
+  }, true)
 })
