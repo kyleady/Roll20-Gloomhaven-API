@@ -24,19 +24,24 @@ const fixedPlayCardToTable = (cardid, options) => {
                         let left = options.left || (parseInt(page.get('width'))*70)/2;
                         let top = options.top || (parseInt(page.get('height'))*70)/2;
 
-                        createObj( 'graphic', {
-                            subtype: 'card',
-                            cardid: card.id,
-                            pageid: page.id,
+                        const graphic = createObj( 'graphic', {
+                            _subtype: 'card',
+                            _cardid: card.id,
+                            _pageid: page.id,
                             currentSide: currentSide,
                             imgsrc: imgs[currentSide],
                             sides: imgs.map(i => encodeURIComponent(i)).join('|'),
-                            left,top,width,height,
+                            left: left,
+                            top: top,
+                            width: width,
+                            height: height,
                             layer: 'objects',
                             isdrawing: true,
                             controlledby: 'all',
                             gmnotes: `cardid:${card.id}`
                         });
+
+                        toFront(graphic)
                     } else {
                         whisper(`Specified pageid does not exists.`);
                     }
