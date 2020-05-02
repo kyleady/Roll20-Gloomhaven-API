@@ -1,3 +1,49 @@
+function eachCard(msg, givenFunction, options) {
+  options = options || {}
+  options.characterRequired = false
+  options.defaultCharacter = false
+  if(options.cardRequired == undefined) options.cardRequired = true
+  if(options.deckRequired == undefined) options.deckRequired = true
+  eachCharacter(msg, (character, graphic) => {
+    let card
+    let deck
+
+    let cardid = graphic.get('_cardid')
+    if(!cardid && options.cardRequired) {
+      whisper("Select only cards for initiative.", {speakingTo: msg.playerid})
+      return
+    }
+
+    if(cardid) {
+      card = getObj('card', cardid)
+      if(!card && options.cardRequired){
+        whisper(`Invalid card: ${graphic.get('name')}. See log.`, {speakingTo: msg.playerid})
+        log(`Invalid CardId: ${cardid}`)
+        return
+      }
+
+      if(card) {
+        let deckid = card.get('_deckid')
+        if(!deckid && options.deckRequired) {
+          whisper(`Card ${card.get("name")} does not belong to a deck`, {speakingTo: msg.playerid})
+          return
+        }
+
+        if(deckid) {
+          deck = getObj('deck', deckid)
+          if(!deck && options.deckRequired) {
+            whisper(`Card ${card.get("name")} belongs to an invalid deck. See log.`, {speakingTo: msg.playerid})
+            log(`Invalid DeckId: ${deckid}`)
+            return
+          }
+        }
+      }
+    }
+
+    givenFunction(character, graphic, card, deck)
+  }, options)
+}
+
 function eachGraphic(msg, givenFunction, options) {
   options = options || {}
   options.characterRequired = false
