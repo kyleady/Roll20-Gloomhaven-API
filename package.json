@@ -10,7 +10,7 @@
     "mock20": "^1.0.0"
   },
   "scripts": {
-    "test": "npm run compile_script && npm run compile_module && mocha --recursive",
+    "test": "npm run compile_script && npm run compile_module && mocha --recursive --retries 10",
     "compile_script": "echo \"\" > INKTotal.js && find ./Scripts -type f -exec cat {} + >> INKTotal.js",
     "compile_module": "echo \"require('mock20')\" > INKModule.js && cat INKTotal.js >> INKModule.js && echo \"MOCK20endOfLastScript();\" >> INKModule.js"
   },
