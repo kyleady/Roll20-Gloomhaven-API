@@ -2,6 +2,7 @@
 function calcGloomhavenInit(msg, options) {
   options = options || {}
   var initiativeDetails = []
+  if(options.selected != undefined) msg.selected = options.selected
   eachCard(msg, (character, graphic, card, deck) => {
     let initiativeValue = card.get('name').substring(0,2)
     if(!RegExp('^\\d\\d$').test(initiativeValue)) {
@@ -13,6 +14,7 @@ function calcGloomhavenInit(msg, options) {
       type: deck.get('name').startsWith('M ') ? 'Monster' : 'Player',
       position: graphic.get('left'),
       value: card.get('name').substring(0,2),
+      imgsrc: card.get('avatar'),
       deckname: deck.get('name')
     })
   }, { min: 1 })
@@ -22,7 +24,8 @@ function calcGloomhavenInit(msg, options) {
     return {
       name: initiativeDetails[0].deckname.substring(2),
       first: initiativeDetails[0].value,
-      second: 'M'
+      second: 'M',
+      imgsrcs: [initiativeDetails[0].imgsrc]
     }
   } else if(initiativeDetails.length == 2
     && initiativeDetails[0].type == 'Player'
@@ -32,7 +35,8 @@ function calcGloomhavenInit(msg, options) {
     return {
       name: player.get('_displayname'),
       first: initiativeDetails[0].value,
-      second: initiativeDetails[1].value
+      second: initiativeDetails[1].value,
+      imgsrcs: [initiativeDetails[0].imgsrc, initiativeDetails[1].imgsrc]
     }
   } else {
     whisper('Select exactly two player initiative cards or one monster initiative card.')

@@ -63,7 +63,7 @@ function eachCharacter(msg, givenFunction, options){
     options.min = 1
     options.max = 1
   }
-  
+
   if((msg.selected == undefined || msg.selected.length <= 0) && options.defaultCharacter){
     msg.selected = [defaultCharacter(msg.playerid)];
     if(msg.selected[0] == undefined) return;
@@ -135,6 +135,9 @@ function eachCharacter(msg, givenFunction, options){
         log(graphic)
         return whisper('character undefined', {speakingTo: msg.playerid, gmEcho: true});
       }
+    } else if(typeof obj.get === 'function' && obj.get('_type') == 'card') {
+      var graphic = { get: key => /_?cardid/.test(key) ? obj.id : undefined }
+      var character = undefined
     } else {
       log('Selected is neither a graphic nor a character.')
       log(obj)

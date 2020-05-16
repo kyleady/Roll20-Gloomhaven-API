@@ -114,6 +114,26 @@ on("ready",function(){
     turns.save()
     state.INK_GLOOMHAVEN = state.INK_GLOOMHAVEN || {}
     state.INK_GLOOMHAVEN.playerInitiative = {}
+    const temporaryCards = filterObjs(obj => {
+      if(obj.get('_type') != 'card') return false;
+      if(![
+        'Player Curse',
+        'Monster Curse',
+        'Bless',
+        'Penalty -1',
+      ].includes(obj.get('name'))) return false;
+      const deck = getObj('deck', obj.get('_deckid'))
+      if(![
+        'Player 1 Modifiers',
+        'Player 2 Modifiers',
+        'Player 3 Modifiers',
+        'Player 4 Modifiers',
+        'Monster Modifiers',
+      ].includes(deck.get('name'))) return false;
+      return true;
+    })
+
+    _.each(temporaryCards, temporaryCard => temporaryCard.remove())
     announcePlan()
   }, true);
 
@@ -132,10 +152,9 @@ on("ready",function(){
     const initObj = calcGloomhavenInit(msg, { player: player })
     if(!initObj) return
     const turns = new INQTurns({ order: GLOOMHAVEN_INITIATIVE_ORDER })
-    const turnObj = turns.toTurnObj(initObj.name, `${initObj.first} ${initObj.second}`)
     state.INK_GLOOMHAVEN = state.INK_GLOOMHAVEN || {}
     state.INK_GLOOMHAVEN.playerInitiative = state.INK_GLOOMHAVEN.playerInitiative || {}
-    state.INK_GLOOMHAVEN.playerInitiative[player.get('_d20userid')] = turnObj
+    state.INK_GLOOMHAVEN.playerInitiative[player.get('_d20userid')] = initObj
     announcePlan()
     whisper(`Secretly added ${initObj.first} ${initObj.second} for ${player.get('_displayname')}'s initiative.`, { speakingTo: msg.playerid })
   }, true)
@@ -145,9 +164,11 @@ on("ready",function(){
     const turns = new INQTurns({ order: GLOOMHAVEN_INITIATIVE_ORDER })
     state.INK_GLOOMHAVEN = state.INK_GLOOMHAVEN || {}
     state.INK_GLOOMHAVEN.playerInitiative = state.INK_GLOOMHAVEN.playerInitiative || {}
-    state.INK_GLOOMHAVEN.monsterPlayZone = state.INK_GLOOMHAVEN.monsterPlayZone || {}
+    state.INK_GLOOMHAVEN.monsterInitiative = state.INK_GLOOMHAVEN.monsterInitiative || {}
     for(let readyPlayer in state.INK_GLOOMHAVEN.playerInitiative) {
-      turns.turnorder.push(state.INK_GLOOMHAVEN.playerInitiative[readyPlayer])
+      let initObj = state.INK_GLOOMHAVEN.playerInitiative[readyPlayer]
+      let turnObj = turns.toTurnObj(initObj.name, `${initObj.first} ${initObj.second}`)
+      turns.turnorder.push(turnObj)
     }
 
     const livingGraphics = filterObjs(obj => {
@@ -166,8 +187,8 @@ on("ready",function(){
       if(!decks || decks.length != 1) return '';
       const deck = decks[0];
       const deckid = deck.id
-      if(!(deckid in state.INK_GLOOMHAVEN.monsterPlayZone)) {
-        const playIndex = 1 + Object.keys(state.INK_GLOOMHAVEN.monsterPlayZone).length
+      if(!(deckid in state.INK_GLOOMHAVEN.monsterInitiative)) {
+        const playIndex = 1 + Object.keys(state.INK_GLOOMHAVEN.monsterInitiative).length
         const playZones = findObjs({
           _type: 'graphic',
           _pageid: Campaign().get('playerpageid'),
@@ -175,7 +196,10 @@ on("ready",function(){
         })
 
         if(!playZones || !playZones.length) return whisper(`Monster ${playIndex} INK CardPlayer does not exist.`, { speakingTo: msg.playerid })
-        state.INK_GLOOMHAVEN.monsterPlayZone[deckid] = playZones[0].id
+        state.INK_GLOOMHAVEN.monsterInitiative[deckid] = {
+          playZoneId: playZones[0].id,
+          initObj: undefined
+        }
       }
 
       return deck.id
@@ -183,15 +207,19 @@ on("ready",function(){
 
     _.each(deckIds, deckId => {
       if(deckId) {
-        let card = playDeckFn([], msg, { deckid: deckId, playZoneId: state.INK_GLOOMHAVEN.monsterPlayZone[deckId] })
+        const playZoneId = state.INK_GLOOMHAVEN.monsterInitiative[deckId].playZoneId
+        let card = playDeckFn([], msg, { deckid: deckId, playZoneId: playZoneId, announce: false })
         if(!card) {
           shuffleDeckFn([], msg, { deckid: deckId })
-          card = playDeckFn([], msg, { deckid: deckId, playZoneId: state.INK_GLOOMHAVEN.monsterPlayZone[deckId] })
+          card = playDeckFn([], msg, { deckid: deckId, playZoneId: playZoneId, announce: false })
         }
 
         const deck = getObj('deck', deckId)
         if(card && deck) {
-          turns.turnorder.push(turns.toTurnObj(deck.get('name').substring(2), `${card.get('name').substring(0, 2)} M`))
+          let monsterInitObj = calcGloomhavenInit(msg, { selected: [card] })
+          state.INK_GLOOMHAVEN.monsterInitiative[deckId].initObj = monsterInitObj
+          let monsterTurnObj = turns.toTurnObj(monsterInitObj.name, `${monsterInitObj.first} ${monsterInitObj.second}`)
+          turns.turnorder.push(monsterTurnObj)
         }
       }
     })

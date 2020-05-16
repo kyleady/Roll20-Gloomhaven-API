@@ -155,6 +155,7 @@ function addDeckFn(matches, msg) {
 
 function playDeckFn(matches, msg, options) {
   options = options || {}
+  if(options.announce == undefined) options.announce = true
   let deck = undefined
   let playZone = undefined
   if(!options.deckid) {
@@ -197,7 +198,9 @@ function playDeckFn(matches, msg, options) {
 
   fixedPlayCardToTable(cardid, { left: playZone.get('left'), top: playZone.get('top'), pageid: getPlayerPageID(msg.playerid)} )
   const card = getObj('card', cardid)
-  announce(deckNotification(deck, {"card": card, "status": "Played"}))
+  if(options.announce) {
+    announce(deckNotification(deck, {"card": card, "status": "Played"}))
+  }
   return card
 }
 
