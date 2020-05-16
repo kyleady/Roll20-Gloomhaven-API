@@ -6,8 +6,12 @@ function newGloomRound(turns, msg) {
   turns.turnorder = [turns.toTurnObj('End of Round', `R${nextRound}`)]
   turns.save()
 
-  //empty secret initiative for players
+  //empty initiative
+  state.INK_GLOOMHAVEN = state.INK_GLOOMHAVEN || {}
   state.INK_GLOOMHAVEN.playerInitiative = {}
+  _.each(state.INK_GLOOMHAVEN.monsterInitiative, monsterInitiative => {
+    monsterInitiative.initObj = false
+  })
 
   //shuffle decks that have at least one card that requires shuffling
   const cardsOnTheTable = filterObjs(obj => {
