@@ -21,13 +21,27 @@ function newGloomRound(turns, msg) {
   })
 
   const decksToShuffle = {}
+  const cards = []
   _.each(cardsOnTheTable, graphic => {
     const cardid = graphic.get('_cardid') || graphic.get('gmnotes').replace('cardid:', '')
     const card = getObj('card', cardid)
+    cards.push(card)
     if(card.get('name').endsWith(' {Shuffle}')) {
       decksToShuffle[card.get('_deckid')] = true
     }
   })
+
+  if(Object.keys(decksToShuffle).length) {
+    _.each(cards, card => {
+      if([
+        'Bless',
+        'Monster Curse',
+        'Player Curse'
+      ].includes(card.get('name')) && card.get('_deckid') in decksToShuffle) {
+        card.remove()
+      }
+    })
+  }
 
   _.each(decksToShuffle, (needsShuffling, deckid) => shuffleDeckFn([], msg, { deckid: deckid }))
 }
