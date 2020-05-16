@@ -155,7 +155,7 @@ function addDeckFn(matches, msg) {
 
 function playDeckFn(matches, msg, options) {
   options = options || {}
-  if(options.announce == undefined) options.annoucne = true
+  if(options.announce == undefined) options.announce = true
   let deck = undefined
   let playZone = undefined
   if(!options.deckid) {
