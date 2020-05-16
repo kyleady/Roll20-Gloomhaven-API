@@ -11,7 +11,7 @@ function announcePlan() {
   })
 
   if(readyPlayers == totalPlayers) {
-    output += '{{reveal=[!Reveal](!init reveal)}} '
+    output += '{{reveal=[!init reveal](!init reveal)}} '
   } else {
     output += '{{plan=Select and [!init plan](!init plan)}}'
   }
