@@ -208,7 +208,7 @@ on("ready",function(){
     _.each(deckIds, deckId => {
       if(deckId) {
         const playZoneId = state.INK_GLOOMHAVEN.monsterInitiative[deckId].playZoneId
-        let card = playDeckFn([], msg, { deckid: deckId, playZoneId: playZoneI  d, announce: false })
+        let card = playDeckFn([], msg, { deckid: deckId, playZoneId: playZoneId, announce: false })
         if(!card) {
           shuffleDeckFn([], msg, { deckid: deckId })
           card = playDeckFn([], msg, { deckid: deckId, playZoneId: playZoneId, announce: false })
