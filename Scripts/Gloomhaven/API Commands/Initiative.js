@@ -121,6 +121,13 @@ on("ready",function(){
     })
 
     state.INK_GLOOMHAVEN.monsterInitiative = {}
+    const modifierDecks = [
+      'Player 1 Modifiers',
+      'Player 2 Modifiers',
+      'Player 3 Modifiers',
+      'Player 4 Modifiers',
+      'Monster Modifiers',
+    ]
     const temporaryCards = filterObjs(obj => {
       if(obj.get('_type') != 'card') return false;
       if(![
@@ -130,17 +137,12 @@ on("ready",function(){
         'Penalty -1',
       ].includes(obj.get('name'))) return false;
       const deck = getObj('deck', obj.get('_deckid'))
-      if(![
-        'Player 1 Modifiers',
-        'Player 2 Modifiers',
-        'Player 3 Modifiers',
-        'Player 4 Modifiers',
-        'Monster Modifiers',
-      ].includes(deck.get('name'))) return false;
+      if(!modifierDecks.includes(deck.get('name'))) return false;
       return true;
     })
 
     _.each(temporaryCards, temporaryCard => temporaryCard.remove())
+    _.each(modifierDecks, modifierDeck => shuffleDeckFn([, modifierDeck], msg))
     announcePlan()
   }, true);
 
