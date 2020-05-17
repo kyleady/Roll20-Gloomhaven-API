@@ -108,12 +108,19 @@ on("ready",function(){
   }, true);
 
   //clear the turn track for a new scenario
-  CentralInput.addCMD(/^!\s*init(?:iative)?\s+clean$/i, () => {
+  CentralInput.addCMD(/^!\s*init(?:iative)?\s+clean$/i, ([], msg) => {
     const turns = new INQTurns({ order: GLOOMHAVEN_INITIATIVE_ORDER })
     turns.turnorder = [turns.toTurnObj('End of Round', 'R0')]
     turns.save()
     state.INK_GLOOMHAVEN = state.INK_GLOOMHAVEN || {}
     state.INK_GLOOMHAVEN.playerInitiative = {}
+    _.each(state.INK_GLOOMHAVEN.monsterInitiative, (monsterInitDetails, deckid) => {
+      const statObj = getObj('graphic', monsterInitDetails.statId)
+      if(statObj) statObj.remove()
+      shuffleDeckFn([], msg, { deckid: deckid })
+    })
+
+    state.INK_GLOOMHAVEN.monsterInitiative = {}
     const temporaryCards = filterObjs(obj => {
       if(obj.get('_type') != 'card') return false;
       if(![
@@ -183,12 +190,12 @@ on("ready",function(){
     decksToFlip = {}
     _.each(livingGraphics, livingGraphic => {
       const monsterDeckAttrs = findObjs({ _type: 'attribute', _characterid: livingGraphic.get('represents'), name: 'M Deck'});
-      if(!monsterDeckAttrs || monsterDeckAttrs.length != 1) return '';
+      if(!monsterDeckAttrs || monsterDeckAttrs.length != 1) return;
       const decks = findObjs({ _type: 'deck', name: monsterDeckAttrs[0].get('current') })
-      if(!decks || decks.length != 1) return '';
+      if(!decks || decks.length != 1) return;
       const deck = decks[0];
       const deckid = deck.id
-      recordMonsterPlayZone(deckid, msg.playerid)
+      recordMonsterDetails(deckid, msg.playerid, livingGraphic.get('represents'))
       decksToFlip[deckid] = true
     })
 
@@ -199,9 +206,9 @@ on("ready",function(){
     turns.sort()
     turns.save()
     announceTurn(turns)
-  });
+  }, true);
 
-  //reveal and sort the initiatives
+  //reveal and sort the initiatives after opening a door (monsters in revealed room determined by what you select)
   CentralInput.addCMD(/^!\s*init(?:iative)?\s+door$/i, ([], msg) => {
     const turns = new INQTurns({ order: GLOOMHAVEN_INITIATIVE_ORDER })
     state.INK_GLOOMHAVEN = state.INK_GLOOMHAVEN || {}
@@ -217,7 +224,7 @@ on("ready",function(){
       if(!decks || decks.length != 1) return;
       const deck = decks[0];
       const deckid = deck.id
-      recordMonsterPlayZone(deckid, msg.playerid)
+      recordMonsterDetails(deckid, msg.playerid, character.id)
       if(!state.INK_GLOOMHAVEN.monsterInitiative[deckid].initObj) {
         decksToFlip[deckid] = true
       }
