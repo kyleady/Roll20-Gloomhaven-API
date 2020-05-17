@@ -31,6 +31,7 @@ function recordMonsterDetails(deckid, playerid, characterid) {
 
     if(!statObjs || !statObjs.length) return whisper(`${statName} does not exist.`)
     const statObj = statObjs[0]
+
     statObj.get('_defaulttoken', _defaultjson => {
       const modifiedDetails = carefulParse(_defaultjson)
       delete modifiedDetails._type
@@ -42,7 +43,10 @@ function recordMonsterDetails(deckid, playerid, characterid) {
       modifiedDetails.height = statZone.get('height')
       modifiedDetails.represents = statObj.id
       modifiedDetails.controlledby = 'all'
-      modifiedDetails.imgsrc = getCleanImgsrc(modifiedDetails.imgsrc)
+      const currentSide = state.INK_GLOOMHAVEN.scenarioLevel < 4 ? 0 : 1
+      modifiedDetails.rotation = 360 - (state.INK_GLOOMHAVEN.scenarioLevel - 4 * currentSide) * 90
+      const sides = modifiedDetails.sides.split('|')
+      modifiedDetails.imgsrc = getCleanImgsrc(decodeURIComponent(sides[currentSide]))
       const createdStats = createObj('graphic', modifiedDetails)
       state.INK_GLOOMHAVEN.monsterInitiative[deckid].statId = createdStats.id
     })
