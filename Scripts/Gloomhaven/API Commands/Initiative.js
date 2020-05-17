@@ -107,45 +107,6 @@ on("ready",function(){
     whisper("Initiative cleared.")
   }, true);
 
-  //clear the turn track for a new scenario
-  CentralInput.addCMD(/^!\s*init(?:iative)?\s+clean$/i, ([], msg) => {
-    const turns = new INQTurns({ order: GLOOMHAVEN_INITIATIVE_ORDER })
-    turns.turnorder = [turns.toTurnObj('End of Round', 'R0')]
-    turns.save()
-    state.INK_GLOOMHAVEN = state.INK_GLOOMHAVEN || {}
-    state.INK_GLOOMHAVEN.playerInitiative = {}
-    _.each(state.INK_GLOOMHAVEN.monsterInitiative, (monsterInitDetails, deckid) => {
-      const statObj = getObj('graphic', monsterInitDetails.statId)
-      if(statObj) statObj.remove()
-      shuffleDeckFn([], msg, { deckid: deckid })
-    })
-
-    state.INK_GLOOMHAVEN.monsterInitiative = {}
-    const modifierDecks = [
-      'Player 1 Modifiers',
-      'Player 2 Modifiers',
-      'Player 3 Modifiers',
-      'Player 4 Modifiers',
-      'Monster Modifiers',
-    ]
-    const temporaryCards = filterObjs(obj => {
-      if(obj.get('_type') != 'card') return false;
-      if(![
-        'Player Curse',
-        'Monster Curse',
-        'Bless',
-        'Penalty -1',
-      ].includes(obj.get('name'))) return false;
-      const deck = getObj('deck', obj.get('_deckid'))
-      if(!modifierDecks.includes(deck.get('name'))) return false;
-      return true;
-    })
-
-    _.each(temporaryCards, temporaryCard => temporaryCard.remove())
-    _.each(modifierDecks, modifierDeck => shuffleDeckFn([, modifierDeck], msg))
-    announcePlan()
-  }, true);
-
   //secretly store's player initaive for use when all players are ready
   CentralInput.addCMD(/^!\s*init(?:iative)?\s+plan\s*(.*)$/i, ([, playername], msg) => {
     let player = undefined;
