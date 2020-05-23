@@ -44,7 +44,7 @@ on('ready', () => {
 
     state.INK_GLOOMHAVEN.scenarioLevel = scenarioLevel
     announcePlan()
-  })
+  }, true)
 
   //clear out an old scenario after it has ended
   CentralInput.addCMD(/^!\s*scenario?\s+end$/i, ([], msg) => {
