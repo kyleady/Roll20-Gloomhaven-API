@@ -197,6 +197,8 @@ function playDeckFn(matches, msg, options) {
   }
 
   fixedPlayCardToTable(cardid, { left: playZone.get('left'), top: playZone.get('top'), pageid: getPlayerPageID(msg.playerid)} )
+  giveCardToPlayer(cardid, msg.playerid)
+  takeCardFromPlayer(msg.playerid, { cardid: cardid })
   const card = getObj('card', cardid)
   if(options.announce) {
     announce(deckNotification(deck, {"card": card, "status": "Played"}))
