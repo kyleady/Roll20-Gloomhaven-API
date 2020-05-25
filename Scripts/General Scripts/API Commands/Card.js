@@ -90,6 +90,7 @@ function topCardFn([, whereToPlace], msg) {
 
   shuffleDeck(deckid, true, orderedList)
   _.each(cardsInTheDiscard, cardInTheDiscard => hackyDrawCard(msg.playerid, deckid))
+  announce(deckNotification(deck, { status: 'Stacked', cards: cardDetails.length, location: placeOnTop ? 'Top' : 'Bottom' }))
 }
 
 on('ready', () => {
