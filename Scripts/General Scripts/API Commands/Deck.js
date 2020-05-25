@@ -129,12 +129,19 @@ function drawDeckFn(matches, msg) {
   }
 }
 
-function addDeckFn(matches, msg) {
-  var suggestion = '!deck add $'
-  var deckPhrase = matches[1] || ''
-  var decks = suggestCMD(suggestion, deckPhrase, msg.playerid, 'deck', obj => playerIsGM(msg.playerid) || obj.get('showplayers'))
-  if(!decks) return;
-  var deck = decks[0]
+function addDeckFn(matches, msg, options) {
+  options = options || {}
+  let deck
+  if(options.deckid) {
+    deck = getObj('deck', options.deckid)
+  } else {
+    var suggestion = '!deck add $'
+    var deckPhrase = matches[1] || ''
+    var decks = suggestCMD(suggestion, deckPhrase, msg.playerid, 'deck', obj => playerIsGM(msg.playerid) || obj.get('showplayers'))
+    if(!decks) return;
+    deck = decks[0]
+  }
+
   eachCard(msg, (character, graphic, originalCard, originalDeck) => {
     if(originalDeck && originalDeck.id == deck.id) {
       whisper(`WARNING: Card ${originalCard.get('name')} already added to Deck ${deck.get('name')}.`, {speakingTo: msg.playerid})
@@ -169,23 +176,8 @@ function playDeckFn(matches, msg, options) {
   }
 
   if(!options.playZoneId) {
-    var pageid = getPlayerPageID(msg.playerid)
-    const playZones = findObjs({
-      _type: 'graphic',
-      _pageid: pageid,
-      layer: 'gmlayer',
-      name: `${deck.get('name')} INK CardPlayer`
-    })
-
-    if(playZones == 0) {
-      whisper(`WARNING: The Deck ${deck.get('name')} does not have a designated play zone. Please contact your GM.`, {speakingTo: msg.playerid})
-      return
-    } else if(playZones > 1) {
-      whisper(`WARNING: There is more than one play zone for the Deck ${deck.get('name')}. Plese contact your GM.`, {speakingTo: msg.playerid})
-      return
-    }
-
-    playZone = playZones[0]
+    playZone = getPlayZone(deckName, msg.playerid)
+    if(!playZone) return;
   } else {
     playZone = getObj('graphic', options.playZoneId)
   }
@@ -196,7 +188,7 @@ function playDeckFn(matches, msg, options) {
     return
   }
 
-  fixedPlayCardToTable(cardid, { left: playZone.get('left'), top: playZone.get('top'), pageid: getPlayerPageID(msg.playerid)} )
+  fixedPlayCardToTable(cardid, { left: playZone.get('left'), top: playZone.get('top'), pageid: playZone.get('_pageid') })
   const card = getObj('card', cardid)
   if(options.announce) {
     announce(deckNotification(deck, {"card": card, "status": "Played"}))
@@ -229,7 +221,7 @@ function dumpDeckFn(matches, msg) {
   const cardsToDump = deck.get("_cardSequencer");
   for(var dumpCount = 0; dumpCount < cardsToDump; dumpCount++) {
     cardid = hackyDrawCard(msg.playerid,  deck.id)
-    fixedPlayCardToTable(cardid, { left: playZone.get('left'), top: playZone.get('top'), pageid: getPlayerPageID(msg.playerid)} )
+    fixedPlayCardToTable(cardid, { left: playZone.get('left'), top: playZone.get('top'), pageid: playZone.get('_pageid') })
   }
 
   whisper(deckNotification(deck, {"dumped": cardsToDump}), {speakingTo: msg.playerid, gmEcho: true})

@@ -1,17 +1,16 @@
 const fixedPlayCardToTable = (cardid, options) => {
-        let card = getObj('card',cardid);
+        let card = getObj('card', cardid);
         if(card){
-            let deck = getObj('deck',card.get('deckid'));
+            let deck = getObj('deck', card.get('deckid'));
             if(deck){
-                if(!isCleanImgsrc(deck.get('avatar')) && !isCleanImgsrc(card.get('avatar'))){
-                    // marketplace-marketplace:
-                    playCardToTable(cardid, options);
-                } else if (isCleanImgsrc(deck.get('avatar')) && isCleanImgsrc(card.get('avatar'))){
+                const deckAvatar = options._deckAvatar || deck.get('avatar')
+                const cardAvatar = options._cardAvatar || card.get('avatar')
+                if (isCleanImgsrc(deckAvatar) && isCleanImgsrc(cardAvatar)){
                     let pageid = options.pageid || Campaign().get('playerpageid');
                     let page = getObj('page',pageid);
                     if(page){
 
-                        let imgs=[getCleanImgsrc(card.get('avatar')),getCleanImgsrc(deck.get('avatar'))];
+                        let imgs=[getCleanImgsrc(cardAvatar),getCleanImgsrc(deckAvatar)];
                         let currentSide = options.hasOwnProperty('currentSide')
                             ? options.currentSide
                             : ('faceup' === deck.get('cardsplayed')
@@ -45,6 +44,9 @@ const fixedPlayCardToTable = (cardid, options) => {
                     } else {
                         whisper(`Specified pageid does not exists.`);
                     }
+                } else if(!isCleanImgsrc(deck.get('avatar')) && !isCleanImgsrc(card.get('avatar'))) {
+                    // marketplace-marketplace:
+                    playCardToTable(cardid, options);
                 } else {
                     whisper(`Can't create cards for a deck mixing Marketplace and User Library images.`);
                 }
