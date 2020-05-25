@@ -52,9 +52,9 @@ function gloomhavenDealBattleGoals(currentPlayers) {
   recallCards(battleGoalDeckId)
   shuffleDeck(battleGoalDeckId, true)
   _.each(currentPlayers, currentPlayer => {
-    const firstCardid = drawCard(battleGoalDeckId)
+    const firstCardid = hackyDrawCard(msg.playerid,  battleGoalDeckId)
     giveCardToPlayer(firstCardid, currentPlayer.id)
-    const secondCardid = drawCard(battleGoalDeckId)
+    const secondCardid = hackyDrawCard(msg.playerid,  battleGoalDeckId)
     giveCardToPlayer(secondCardid, currentPlayer.id)
   })
 }

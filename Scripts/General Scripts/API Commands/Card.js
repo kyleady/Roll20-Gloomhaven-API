@@ -89,7 +89,7 @@ function topCardFn([, whereToPlace], msg) {
                           )
 
   shuffleDeck(deckid, true, orderedList)
-  _.each(cardsInTheDiscard, cardInTheDiscard => drawCard(deckid))
+  _.each(cardsInTheDiscard, cardInTheDiscard => hackyDrawCard(msg.playerid, deckid))
 }
 
 on('ready', () => {

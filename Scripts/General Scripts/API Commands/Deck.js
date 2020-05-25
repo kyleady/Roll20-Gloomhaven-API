@@ -118,7 +118,7 @@ function drawDeckFn(matches, msg) {
   var decks = suggestCMD(suggestion, deckPhrase, msg.playerid, 'deck', obj => playerIsGM(msg.playerid) || obj.get('showplayers'))
   if(!decks) return;
   var deck = decks[0]
-  var cardId = drawCard(deck.id)
+  var cardId = hackyDrawCard(msg.playerid,  deck.id)
   if(cardId) {
     var card = getObj('card', cardId)
     var maxCards = deck.get("_currentDeck").split(',').length
@@ -190,15 +190,13 @@ function playDeckFn(matches, msg, options) {
     playZone = getObj('graphic', options.playZoneId)
   }
 
-  const cardid = drawCard(deck.id)
+  const cardid = hackyDrawCard(msg.playerid,  deck.id)
   if(!cardid) {
     whisper(`WARNING: Deck ${deck.get('name')} has no more cards to play.`)
     return
   }
 
   fixedPlayCardToTable(cardid, { left: playZone.get('left'), top: playZone.get('top'), pageid: getPlayerPageID(msg.playerid)} )
-  giveCardToPlayer(cardid, msg.playerid)
-  takeCardFromPlayer(msg.playerid, { cardid: cardid })
   const card = getObj('card', cardid)
   if(options.announce) {
     announce(deckNotification(deck, {"card": card, "status": "Played"}))
@@ -230,7 +228,7 @@ function dumpDeckFn(matches, msg) {
   const playZone = playZones[0]
   const cardsToDump = deck.get("_cardSequencer");
   for(var dumpCount = 0; dumpCount < cardsToDump; dumpCount++) {
-    cardid = drawCard(deck.id)
+    cardid = hackyDrawCard(msg.playerid,  deck.id)
     fixedPlayCardToTable(cardid, { left: playZone.get('left'), top: playZone.get('top'), pageid: getPlayerPageID(msg.playerid)} )
   }
 
