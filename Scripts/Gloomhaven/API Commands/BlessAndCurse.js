@@ -45,5 +45,5 @@ on("ready", () => {
     }
 
     shuffleDeck(deck.id, false)
-  })
+  }, true)
 })
